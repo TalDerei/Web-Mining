@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebGPU -- Ethhash POW Javascript Miner</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+
+    <body>
+        <div id="not-supported" style="display: none">
+        WebGPU not supported! Please visit <a href="//webgpu.io">webgpu.io</a> to see the current implementation status.
+        </div>
+    </body>
+    <p>Status: <span id="Status"></span></p>
+    <p>GPU Time: <span id="GPU (Execution Time):"></span></p>
+    <p>CPU Time: <span id="CPU (Execution Time):"></span></p>
+    <script>
+        if (!navigator.gpu) {
+            document.getElementById("not-supported").style.display = "block";
+        }
+
+    </script>
+</html>

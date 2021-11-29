@@ -13,10 +13,19 @@
     <p>Status: <span id="Status"></span></p>
     <p>GPU Time: <span id="GPU (Execution Time):"></span></p>
     <p>CPU Time: <span id="CPU (Execution Time):"></span></p>
-    <script>
-        if (!navigator.gpu) {
-            document.getElementById("not-supported").style.display = "block";
+    <script type="module" src="mining_browerify.js">
+        function waitForBroswer() {
+            return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                    resolve();
+                }, 0);
+            });
         }
 
+        /** Set the status in the program's execution */
+        async function Status(message) {
+            document.getElementById("Status").textContent = message;
+            await waitForBroswer();
+        }
     </script>
 </html>

@@ -20,6 +20,7 @@ tape('POW tests', function (t) {
     )
 
     var epoc = ethHashUtil.getEpoc(bufferToInt(header.number))
+
     t.equal(
       ethHashUtil.getCacheSize(epoc),
       test.cache_size,
@@ -32,7 +33,6 @@ tape('POW tests', function (t) {
     )
 
     ethash.mkcache(test.cache_size, Buffer.from(test.seed, 'hex'))
-    console.log(ethash.cacheHash().toString('hex'))
     t.equal(
       ethash.cacheHash().toString('hex'),
       test.cache_hash,

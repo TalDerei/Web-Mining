@@ -115,7 +115,7 @@ Ethash.prototype.headerHash = function (header) {
  * @param number Number
  * @param cm function
  */
-Ethash.prototype.loadEpoc = function (number, cb) {
+Ethash.prototype.loadEpoc = function (number, cb) { 
   var self = this
   const epoc = ethHashUtil.getEpoc(number)
 

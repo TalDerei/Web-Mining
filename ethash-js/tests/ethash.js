@@ -12,7 +12,6 @@ tape('POW tests', function (t) {
   tests.forEach(function (key) {
     var test = powTests[key]
     var header = new Header(Buffer.from(test.header, 'hex'))
-
     var headerHash = ethash.headerHash(header.raw)
     t.equal(
       headerHash.toString('hex'),
@@ -33,6 +32,7 @@ tape('POW tests', function (t) {
     )
 
     ethash.mkcache(test.cache_size, Buffer.from(test.seed, 'hex'))
+    console.log(ethash.cacheHash().toString('hex'))
     t.equal(
       ethash.cacheHash().toString('hex'),
       test.cache_hash,

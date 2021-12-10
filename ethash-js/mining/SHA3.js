@@ -21,7 +21,7 @@ if (!navigator.gpu) {
     const device = await adapter.requestDevice();
 
     // Create variables, this can be an input
-    const MessageIn = "aaa";
+    const MessageIn = 10;
 
     const gpuBuffer = device.createBuffer({
         mappedAtCreation: true,
@@ -75,7 +75,16 @@ if (!navigator.gpu) {
 
     const shaderModule = device.createShaderModule({
         code:`
-        
+            // I am taking messages in as a 32 bit float.
+            // Tried to find some variable that will support 256 bits but I couldn't
+            [[group(0), binding(0)]] var<storage, read> MessageIn : f32;
+            [[group(0), binding(1)]] var<storage, write> resultMessage : f32;
+            [[stage(compute)]]
+            // Takes no input, returns nothing. Everything will be passed to the variable resultMessage
+            fn main(){
+                // Doing a left shift of the bits
+                resultMessage <<= MessageIn;
+            }
         `
     });
 
@@ -88,4 +97,42 @@ if (!navigator.gpu) {
             entryPoint: "main"
         }
     });
+
+    const commandEncoder = device.createCommandEncoder();
+
+    const passEncoder = commandEncoder. beginComputePass();
+    passEncoder.setPipeline(computePipeline);
+    passEncoder.setBindGroup(0, bindGroup);
+
+    passEncoder.dispatch();
+    passEncoder.endPass();
+
+    const gpuBufferResult = device.createBuffer({
+        size: gpuBuffer,
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+    });
+        
+    /** encoder.copyBufferToBuffer() adds the command to command queue for later execution */
+    commandEncoder.copyBufferToBuffer(
+        gpuBuffer,      /** Source Buffer */
+        0,                          /** Source Offset */
+        gpuBufferResult,            /** Destination Buffer */
+        0,                          /** Destination Offset */
+        MessageResult          /** Size of Memory */
+    );
+
+    /** Finish encoding and submit commands to GPU device command queue */
+    const gpuCommands = commandEncoder.finish();
+    device.queue.submit([gpuCommands]);
+
+/** 
+ * 9. Read Buffer From GPU
+ */
+
+    /** mapAsync() returns a promise that will resolve when the GPU buffer is mapped */
+    await gpuBufferResult.mapAsync(GPUMapMode.READ);
+    const finalBuffer = gpuBufferResult.getMappedRange();
+
+    /** Log result */
+    console.log(new Float32Array(finalBuffer));
 })();

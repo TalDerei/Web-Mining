@@ -21,11 +21,11 @@ if (!navigator.gpu) {
     const device = await adapter.requestDevice();
 
     // Create variables, this can be an input
-    const MessageIn = 10;
+    const MessageIn = new Float32Array([10]);
 
     const gpuBuffer = device.createBuffer({
         mappedAtCreation: true,
-        size: byteSize(MessageIn),
+        size: MessageIn.byteLength,
         usage: GPUBufferUsage.STORAGE,
     });
 
@@ -33,8 +33,9 @@ if (!navigator.gpu) {
     new Float32Array(bufferMessage).set(MessageIn);
     gpuBuffer.unmap();
 
+    const messageResultSize = 256;
     const MessageResult = device.createBuffer({
-        size: 256,
+        size: messageResultSize,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     });
 
@@ -75,15 +76,19 @@ if (!navigator.gpu) {
 
     const shaderModule = device.createShaderModule({
         code:`
+            [[block]] struct Matrix {
+                size : vec2<f32>;
+                numbers: array<f32>;
+            };
             // I am taking messages in as a 32 bit float.
             // Tried to find some variable that will support 256 bits but I couldn't
-            [[group(0), binding(0)]] var<storage, read> MessageIn : f32;
-            [[group(0), binding(1)]] var<storage, write> resultMessage : f32;
+            [[group(0), binding(0)]] var<storage, read> MessageIn : Matrix;
+            [[group(0), binding(1)]] var<storage, write> resultMessage : Matrix;
             [[stage(compute)]]
             // Takes no input, returns nothing. Everything will be passed to the variable resultMessage
             fn main(){
                 // Doing a left shift of the bits
-                resultMessage <<= MessageIn;
+                resultMessage = MessageIn;
             }
         `
     });
@@ -104,21 +109,22 @@ if (!navigator.gpu) {
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
 
-    passEncoder.dispatch();
+    // passEncoder.dispatch();
     passEncoder.endPass();
 
     const gpuBufferResult = device.createBuffer({
-        size: gpuBuffer,
+        size: messageResultSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
+
         
     /** encoder.copyBufferToBuffer() adds the command to command queue for later execution */
     commandEncoder.copyBufferToBuffer(
-        gpuBuffer,      /** Source Buffer */
+        gpuBuffer,                  /** Source Buffer */
         0,                          /** Source Offset */
         gpuBufferResult,            /** Destination Buffer */
         0,                          /** Destination Offset */
-        MessageResult          /** Size of Memory */
+        messageResultSize               /** Size of Memory */
     );
 
     /** Finish encoding and submit commands to GPU device command queue */

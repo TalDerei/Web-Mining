@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebGPU -- Ethhash POW Javascript Miner</title>
+        <!-- <link rel="stylesheet" href="styles.css"> -->
+    </head>
+
+    <body>
+        <div id="not-supported" style="display: none">
+        WebGPU not supported! Please visit <a href="//webgpu.io">webgpu.io</a> to see the current implementation status.
+        </div>
+    </body>   
+    <script type="module" src="gpu_compute.js">
+        function waitForBroswer() {
+            return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                    resolve();
+                }, 0);
+            });
+        }
+    </script>
+    <script type="module" src="cpu_compute.js">
+        function waitForBroswer() {
+            return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                    resolve();
+                }, 0);
+            });
+        }
+    </script>
+</html>

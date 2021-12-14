@@ -24,7 +24,7 @@ void validate(unsigned char digest[], FILE *fp_new) {
     /** Correct hash to test against */
     unsigned char answer[(SHA256_DIGEST_LENGTH * 2) + 1];
 
-    fgets((char *)answer, 256, fp_new);
+    fgets((char *)answer, (SHA256_DIGEST_LENGTH * 2) + 2, fp_new);
     printf("Correct Hash: %s\n", answer);
 
     char res[(SHA256_DIGEST_LENGTH * 2) + 1] = "";

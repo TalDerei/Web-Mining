@@ -13,6 +13,7 @@
     <p>Status: <span id="Status"></span></p>
     <p>GPU Time: <span id="GPU (Execution Time):"></span></p>
     <p>CPU Time: <span id="CPU (Execution Time):"></span></p>
+    <button onclick="benchmark()">Compute!</button>
     <script type="module" src="browerify.js">
         function waitForBroswer() {
             return new Promise(function(resolve, reject) {
@@ -26,6 +27,16 @@
         async function Status(message) {
             document.getElementById("Status").textContent = message;
             await waitForBroswer();
+        }
+
+        async function benchmark() {
+            // await setStatus("Preparing for the GPU");
+
+            // await computeOnGPU();    
+
+            // await setStatus("Done");
+
+            console.log("Hello!");
         }
     </script>
 </html>

@@ -12,6 +12,7 @@ if (!navigator.gpu) {
  * Perform GPU computations
  */
  (async () => {
+<<<<<<< HEAD
     /** 
      * 1. Initialize WebGPU 
      */
@@ -98,6 +99,37 @@ if (!navigator.gpu) {
         /** bindGroupLayout associated GPU buffers to entries */
         const bindGroupLayout = device.createBindGroupLayout({
             entries: [
+=======
+    // Initialize WebGPU
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) { 
+        console.log("Failed to get GPU adapter!");
+        return; 
+    }
+    const device = await adapter.requestDevice();
+
+    // Create variables, this can be an input
+    const MessageIn = new Float32Array([10]);
+
+    const gpuBuffer = device.createBuffer({
+        mappedAtCreation: true,
+        size: MessageIn.byteLength,
+        usage: GPUBufferUsage.STORAGE,
+    });
+
+    const bufferMessage= gpuBuffer.getMappedRange();
+    new Float32Array(bufferMessage).set(MessageIn);
+    gpuBuffer.unmap();
+
+    const messageResultSize = 256;
+    const MessageResult = device.createBuffer({
+        size: messageResultSize,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    });
+
+    const bindGroupLayout = device.createBindGroupLayout({
+        entries:[
+>>>>>>> c1a4a4d4aecf92032f053ab8629bcbac9f79e30a
             {
                 binding: 0,
                 visibility: GPUShaderStage.COMPUTE,

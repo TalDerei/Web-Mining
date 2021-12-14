@@ -164,7 +164,7 @@ if (!navigator.gpu) {
             [[group(0), binding(1)]] var<storage, write> resultmessageStruct : messageStruct;
         
             [[stage(compute), workgroup_size(8, 8)]]
-            fn main([[builtin(global_invocation_id)]] global_id : vec3<u32>) {
+            fn main() {
                 resultmessageStruct.numbers = MessageFloat.numbers;
             }
             `

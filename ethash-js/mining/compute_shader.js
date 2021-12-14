@@ -11,7 +11,7 @@ if (!navigator.gpu) {
 /**
  * Perform GPU computations
  */
- (async () => {
+ async function computeOnGPU() {
     /** 
      * 1. Initialize WebGPU 
      */
@@ -258,4 +258,4 @@ if (!navigator.gpu) {
 
         /** Log result */
         console.log(new Float32Array(finalBuffer));
-})();
+};

@@ -1,20 +1,14 @@
-SRC = $(filter-out test.c, $(wildcard *.c))
-CFLAGS += -std=c99 -Wall
-DEPS = $(wildcard deps/*/*.c)
-OBJS = $(DEPS:.c=.o)
+all: cuda_test
 
-%.o: %.c
-	$(CC) $< -Ideps -c -o $@ $(CFLAGS)
+SHA256=-Lbuild -lsha256
+SHA256_CU=-Lbuild -lsha256_cu
 
-sha256.o: sha256_cuda.h sha256_cuda.c
+INCLUDES=-Iinclude
+FLAGS= -Wall -g $(INCLUDES)
 
-test: $(OBJS) sha256.o
-	$(CC) sha256.o -Ideps $(OBJS) -Wall -Werror test.c -o test
-	./test
+cuda_test: validation_cuda.cu sha256_cuda.cu sha256_cuda.h md32_common_cu.h
+	nvcc -O3 -o cuda_test validation_cuda.cu $(INCLUDES)
 
 clean:
-	rm -f sha256.o
-	rm -f test
-	rm -f $(OBJS)
-
-.PHONY: test
+	rm -f cuda_test
+	rm -f *.o

@@ -1,5 +1,5 @@
 /**
- * @file validation.c
+ * @file validation_cuda.c
  */
 
 #include <stdio.h>
@@ -8,14 +8,23 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
-#include "sha256.h"
+#include "sha256_cuda.cu"
+
+/** Cuda kernals for executing functions (from host cpu) on device (gpu) */
+__global__ void kernel(unsigned char *d, int d_len, unsigned char *out) {
+  SHA256(d, d_len, out);
+}
+
+// __global__ void kernel(unsigned char digest[], FILE *fp_new) {
+//   validate(digest, fp_new);
+// }
 
 /** Validate block */
 void validate(unsigned char digest[], FILE *fp_new) {
     /** Correct hash to test against */
     unsigned char answer[(SHA256_DIGEST_LENGTH * 2) + 1];
 
-    fgets(answer, 256, fp_new);
+    fgets((char *)answer, 256, fp_new);
     printf("Correct Hash: %s\n", answer);
 
     char res[(SHA256_DIGEST_LENGTH * 2) + 1] = "";
@@ -23,7 +32,7 @@ void validate(unsigned char digest[], FILE *fp_new) {
         sprintf(res + i * 2, "%02x", digest[i]);
     }
 
-    if (strcmp(res, answer) != 0) {
+    if (strcmp((char *)res, (char *)answer) != 0) {
          printf("Block Validated!\n");
     }
     else {
@@ -32,33 +41,45 @@ void validate(unsigned char digest[], FILE *fp_new) {
 }
 
 /** SHA256 hash function */
-char *sha256(unsigned char *data, int d_len, FILE *fp_new, int checksum) {
-    /** Initialize empty 32-byte buffer */
-    unsigned char digest[SHA256_DIGEST_LENGTH] = {};
+unsigned char *sha256(unsigned char *data, int d_len, FILE *fp_new, int checksum) {
+  /** CUDA kernels are asynchronous -- but GPU-related tasks placed in one stream
+  are executed sequentially. cudaDeviceSynchronize() synchronizes the executions */
+  cudaDeviceSynchronize();
+  unsigned char *d_c;
 
-    /** SHA256_CTX context */
-	SHA256_CTX ctx;
+  /** Allocates size bytes of managed memory on the GPU device */
+  cudaMallocManaged((void **)&d_c, d_len);
 
-    /* Call initialize, update, and final APIs to produce 32-byte hash digest */
-	SHA256_Init(&ctx); 
-	SHA256_Update(&ctx, data, strlen(data));
-	SHA256_Final(digest, &ctx);
+  /** Copy memory buffers */
+  cudaMemcpy(d_c, data, d_len, cudaMemcpyHostToDevice);
 
-    /** Print hash result */
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
-        printf("%02x", digest[i]);
-    }
-    printf("\n");
+  unsigned char *digest_c;
+  cudaMallocManaged((void **)&digest_c, SHA256_DIGEST_LENGTH);
+  unsigned char digest[SHA256_DIGEST_LENGTH] = {};
 
-    /** validate hash of block header + nonce */
-    if (checksum == 1) {
-        validate(digest, fp_new);
-    }
+  /** Call kernel to run SHA256 function */
+  kernel<<<1, 1>>>(d_c, d_len, digest_c);
+  cudaDeviceSynchronize();
+  cudaError_t error = cudaGetLastError();
+  if (error != cudaSuccess) {
+    printf("CUDA error: %s\n", cudaGetErrorString(error));
+    exit(-1);
+  }
 
-    /** Reset SHA256_CTX context */
-    memset(&ctx, 0, sizeof(ctx));
+  /** Copy results back from GPU device */
+  cudaMemcpy(digest, digest_c, SHA256_DIGEST_LENGTH, cudaMemcpyDeviceToHost);
+    
+  /** Print hash result */
+  for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+      printf("%02x", digest[i]);
+  }
+  printf("\n");
 
-    return digest;
+  /** Free memory allocation */
+  cudaFree(d_c);
+  cudaFree(digest_c);
+  
+  return digest;
 }
 
 int main () {
@@ -81,8 +102,8 @@ int main () {
     int counter = 0;
     clock_t t;
     t = clock();
-    while (fgets(buffer, 256, fp)) {
-        buffer[strcspn(buffer, "\n")] = 0;
+    while (fgets((char *)buffer, 256, fp)) {
+        buffer[strcspn((char *)buffer, "\n")] = 0;
         printf("--------------------------------------------------------------------------------\n");
         printf("Information for Block: %d\n\n", counter);
 
@@ -102,19 +123,22 @@ int main () {
 
         /** Concatenate and hash + nonce and hash the concatenation */
         printf("\nVALIDATING BLOCK HASH.........");
-        fgets(concat, 226, fp_newer); 
-        concat[strcspn(concat, "\n")] = 0;
+        fgets((char *)concat, 226, fp_newer); 
+        concat[strcspn((char *)concat, "\n")] = 0;
         printf("\n");
         printf("Concat Hash: ");
         sha256(concat, sizeof(concat), fp_new, 1);
         counter++;
     }
-    printf("BLOCKCHAIN VALIDATED!");
     t = clock() - t;
     double time_taken = ((double)t)/CLOCKS_PER_SEC;
     
     /** Record execution time */
     printf("\n\nTime elapsed is: %f\n", time_taken);
+
+    if (counter == 16222) {
+      printf("BLOCKCHAIN VALIDATED!");
+    }
 
     fclose(fp);
     fclose(fp_new);

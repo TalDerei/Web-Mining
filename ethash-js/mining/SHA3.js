@@ -40,18 +40,7 @@ if (!navigator.gpu) {
             MessageFloatArray.push(messageBuffer[i]);
         }
         console.log("MessageIn is: " + MessageFloatArray.toString());
-
-
-        
         const MessageFloat = new Float32Array(MessageFloatArray);
-        /** messageStruct B */
-        // const messageStructB = new Float32Array([
-        //     4, 2,
-        //     1, 2, 
-        //     3, 4,
-        //     5, 6, 
-        //     7, 8
-        // ]);
 
     /** 
      * 3. Allocate Buffered Memory Accessible by GPU (GPU Memory Space) 
@@ -105,13 +94,6 @@ if (!navigator.gpu) {
                 type: "read-only-storage"
                 }
             },
-            // {
-            //     binding: 1,
-            //     visibility: GPUShaderStage.COMPUTE,
-            //     buffer: {
-            //     type: "read-only-storage"
-            //     }
-            // },
             {
                 binding: 1,
                 visibility: GPUShaderStage.COMPUTE,
@@ -131,12 +113,6 @@ if (!navigator.gpu) {
                 buffer: gpuBufferMessageFloat
                 }
             },
-            // {
-            //     binding: 1,
-            //     resource: {
-            //     buffer: gpuBuffermessageStructB
-            //     }
-            // },
             {
                 binding: 1,
                 resource: {
@@ -204,12 +180,6 @@ if (!navigator.gpu) {
         /** Set bind group at index 0 (corresponding with group(0) in WGSL code) */
         passEncoder.setBindGroup(0, bindGroup);
 
-        /** messageStruct dimensions */
-        //const x = Math.ceil(MessageFloat[0] / 8); 
-        //const y = Math.ceil(messageStructB[1] / 8);
-
-        /** dispatch() is the process of encoding a command to execute a kernel function on a set of data */
-        //passEncoder.dispatch(x, y);
 
         /* Ends the compute pass encoder */
         passEncoder.endPass();
